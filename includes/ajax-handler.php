@@ -1,26 +1,28 @@
 <?php
+add_action('wp_ajax_submit_event', 'em_handle_event_submission');
+add_action('wp_ajax_nopriv_submit_event', 'em_handle_event_submission');
 
 function em_handle_event_submission()
 {
-    $title = sanitize_text_field($_POST['title']);
-    $desc = sanitize_textarea_field($_POST['description']);
-    $date = sanitize_text_field($_POST['date']);
-    $location = sanitize_text_field($_POST['location']);
+    $title = sanitize_text_field($_POST['event_title']);
+    $content = sanitize_textarea_field($_POST['event_content']);
+    $event_date = sanitize_text_field($_POST['event_date']);
+    $event_location = sanitize_text_field($_POST['event_location']);
 
-    $event_id = wp_insert_post([
+    $post_id = wp_insert_post([
         'post_type' => 'event',
         'post_title' => $title,
-        'post_content' => $desc,
-        'post_status' => 'publish',
+        'post_content' => $content,
+        'post_status' => 'pending',
     ]);
 
-    if ($event_id) {
-        update_post_meta($event_id, 'event_date', $date);
-        update_post_meta($event_id, 'event_location', $location);
-        wp_send_json_success();
+    if ($post_id) {
+        update_post_meta($post_id, 'event_date', $event_date);
+        update_post_meta($post_id, 'event_location', $event_location);
+        wp_send_json_success('Event submitted and awaiting approval.');
     } else {
-        wp_send_json_error();
+        wp_send_json_error('Failed to submit event.');
     }
+
+    wp_die();
 }
-add_action('wp_ajax_em_submit_event', 'em_handle_event_submission');
-add_action('wp_ajax_nopriv_em_submit_event', 'em_handle_event_submission');
